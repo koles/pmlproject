@@ -1,3 +1,5 @@
+:warning: The compiled HTML version of this README.md file is available from https://koles.github.io/pmlproject/ (the source HTML file is in the gh-pages of this GitHub repo)
+
 # Practical Machine Learning - Week 4 Project
 
 ## Introduction
