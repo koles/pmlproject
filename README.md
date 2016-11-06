@@ -129,7 +129,9 @@ fitRfPcaCv <- train(classe ~ ., data = lifts.train, ntree = 100, method = 'rf',
 After the training, we can display the `fitRfCv$finalModel` and `fitRfPcaCv$finalModel`
 to see the OOB estimate and confusion matrix:
 
-All features (`fitRfCv$finalModel`)
+### All features (`fitRfCv$finalModel`)
+
+```
         OOB estimate of  error rate: 0.47%
 Confusion matrix:
      A    B    C    D    E class.error
@@ -138,8 +140,11 @@ B   17 3697    4    0    0 0.005648198
 C    0   12 3329   11    0 0.006861575
 D    0    2   26 3118    1 0.009215126
 E    0    0    2    9 3517 0.003117914
+```
 
-PCA (`fitRfPcaCv$finalModel`)
+### PCA (`fitRfPcaCv$finalModel`)
+
+```
         OOB estimate of  error rate: 2.07%
 Confusion matrix:
      A    B    C    D    E class.error
@@ -148,8 +153,9 @@ B   59 3618   35    1    5 0.026896181
 C   10   42 3263   34    3 0.026551313
 D    4    4   99 3032    8 0.036542739
 E    3   11   23   18 3473 0.015589569
+```
 
-The model with all features works clearly better than the PCA.
+The model with all features clearly performs better than the one with PCA pre-processing.
 
 ## Prediction
 
