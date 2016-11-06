@@ -107,7 +107,7 @@ pairs(lifts.train.sample, pch = 21,
     bg = c("red", "green3", "blue", "yellow", "green")[unclass(lifts.train.sample$classe)])
 ```
 
-The output is available in the multi-scatter.pdf file in the GitHub repository (9 MB PDF). Due to time limitations, I did not spend much time analyzing these dependencies.
+The output is available in the [multi-scatter.pdf](https://github.com/koles/pmlproject/blob/master/multi-scatter.pdf) file in the GitHub repository (9 MB PDF - may crash your Adobe Reader). Due to time limitations, I did not spend much time analyzing these dependencies.
 
 ## Prediction Models
 
