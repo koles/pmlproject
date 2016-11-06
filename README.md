@@ -48,11 +48,12 @@ applying principal component analysis; even though it will make our results
 harder to interpret.
 
 In short, the plan is as follows:
-# Explore the deta visually, identify and apply necessary data cleansing
-# Simplify the feature space by identifying highly correlated features;
+- Explore the data visually, identify and apply necessary data cleansing
+- Simplify the feature space by identifying highly correlated features;
 create another feature set by applying PCA
-# Test promising algorithm 
-
+- Select and train the promising algorithm with cross-validation
+- Select the best performing one based on the OOB error estimate from cross-validation
+- Run the prediction
 
 ## Data Exploration and Cleansing
 
@@ -88,6 +89,8 @@ data set further by identifying pairs of strongly correlated variables:
 ``` r
 corrgram(lifts.train.sample, order = TRUE, lower.panel=panel.pie)
 ```
+
+![Correlation Matrix](https://raw.githubusercontent.com/koles/pmlproject/master/correlations.png)
 
 It looks like it did not reduce the feature space significantly. Let's try
 the following options:
