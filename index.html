@@ -1,0 +1,115 @@
+<html>
+<head>
+  <title>Practical Machine Learning - Week 4 Project</title>
+</head>
+<body>
+<h1>Practical Machine Learning - Week 4 Project</h1>
+<h2>Introduction</h2>
+<p>The goal of this project was to use data from accelerometers on the
+belt, forearm, arm, and dumbel to determine how well a participant was
+performing barbell lifts. To provide input information, six participants
+were asked to perform barbell lifts correctly and incorrectly in 5
+different ways.</p>
+<p>More information is available from the website here: <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a>
+(see the section on the Weight Lifting Exercise Dataset).</p>
+<h3>About the Code Snippets</h3>
+<p>The snippets in this document can be executed sequentially assuming the
+following libraries have been imported:</p>
+<pre><code class="language-r">library(caret)
+library(corrgram)</code></pre>
+<p>... and the files have been loaded into the <code>lifts.train</code> and
+<code>lifts.test</code> data frames, e.g. using:</p>
+<pre><code class="language-r">lifts.train = read.csv('pml-training.csv')
+lifts.test  = read.csv('pml-testing.csv')</code></pre>
+<p>The full code is available in the <code>pmlproject.R</code> R script in this GitHub
+repository. The <code>pmlproject.R</code> file only includes the code necessary to train
+the selected model and generate the prediction, code for generating plots or
+testing alternative models are commented out.</p>
+<h2>Plan</h2>
+<p>At first, we have to learn about the data, find out which data can be
+useful for prediction and which data cleansing must be done to make the
+data usable.</p>
+<p>At a glance (or by running <code>dim(lifts.train)</code> and <code>dim(lifts.test)</code>), we
+can see that both files have 160 columns, and the training set has 19622
+dimensions. We have to explore options how to simplify the feature space
+by removing irrelevant or duplicate features. We can also consider
+applying principal component analysis; even though it will make our results
+harder to interpret.</p>
+<p>In short, the plan is as follows:</p>
+<ul>
+<li>Explore the data visually, identify and apply necessary data cleansing</li>
+<li>Simplify the feature space by identifying highly correlated features;
+create another feature set by applying PCA</li>
+<li>Select and train the promising algorithm with cross-validation</li>
+<li>Select the best performing one based on the OOB error estimate from cross-validation</li>
+<li>Run the prediction</li>
+</ul>
+<h2>Data Exploration and Cleansing</h2>
+<h3>Rows</h3>
+<p>The training data include rows with the <code>new_window</code> column set to <code>yes</code>
+that hold aggregated information (columns with prefixes such as <code>kurtosis_</code>,
+<code>skewness_</code>, <code>max_</code>, <code>min_</code>. For the sake of simplicity, these rows will
+not be including in the model training.</p>
+<h3>Columns</h3>
+<p>The testing data set has many columns empty or including NA values (most
+of them seem to be the columns dedicated for aggregated information).
+These don't add any value neither for prediction nor training.</p>
+<p>Similarly, the metadata columns (sequence number, <code>user_name</code>,
+timestamps, <code>new_window</code> and <code>no_window</code>) will be removed.</p>
+<p>As we can see by running <code>dim(lifts.train)</code>, we have left with 53 columns after the cleansing:</p>
+<pre><code>&gt; dim(lifts.train)
+[1] 19216    53</code></pre>
+<h3>Correlations</h3>
+<p>A quick look at correlations may suggest whether we could simplify the
+data set further by identifying pairs of strongly correlated variables:</p>
+<pre><code class="language-r">corrgram(lifts.train.sample, order = TRUE, lower.panel=panel.pie)</code></pre>
+<p><img src="https://raw.githubusercontent.com/koles/pmlproject/master/correlations.png" alt="Correlation Matrix" /></p>
+<p>It looks like it did not reduce the feature space significantly. Let's try
+the following options:</p>
+<ul>
+<li>All 53 features we have got after the initial data cleansing</li>
+<li>Apply PCA before training the model (it will make the model impossible to interpret - it might be an issue in some real life scenarios but it was clearly not a requirement for this exercise)</li>
+</ul>
+<h4>Multi Scatter Plot</h4>
+<p>The following chart provides an visualization of dependencies between individual pairs
+of variables and the <code>classe</code> variable:</p>
+<pre><code class="language-r">pairs(lifts.train.sample, pch = 21,
+    bg = c("red", "green3", "blue", "yellow", "green")[unclass(lifts.train.sample$classe)])</code></pre>
+<p>The output is available in the <a href="https://github.com/koles/pmlproject/blob/master/multi-scatter.pdf">multi-scatter.pdf</a> file in the GitHub repository (9 MB PDF - may crash your Adobe Reader). Due to time limitations, I did not spend much time analyzing these dependencies.</p>
+<h2>Prediction Models</h2>
+<p>For prediction, random forest model will be trained, we will test a version with all 53 variables as well as a version with feature space reduced by PCA. In both cases, we will train the model with 5-folds cross-validation to estimate an out-of-saple error.</p>
+<p>The following code was used to train the model with all features:</p>
+<pre><code class="language-r">fitRfCv &lt;- train(classe ~ ., data = lifts.train, ntree = 100, method = 'rf',
+    trControl = trainControl(method = "cv", number = 5))</code></pre>
+<p>... and the following one applies the PCA pre-processing using caret's default 0.95 threashold:</p>
+<pre><code class="language-r">fitRfPcaCv &lt;- train(classe ~ ., data = lifts.train, ntree = 100, method = 'rf',
+    preProcess = "pca", trControl = trainControl(method = "cv", number = 5))</code></pre>
+<p>After the training, we can display the <code>fitRfCv$finalModel</code> and <code>fitRfPcaCv$finalModel</code>
+to see the OOB estimate and confusion matrix:</p>
+<h3>All features (<code>fitRfCv$finalModel</code>)</h3>
+<pre><code>        OOB estimate of  error rate: 0.47%
+Confusion matrix:
+     A    B    C    D    E class.error
+A 5464    4    1    1    1 0.001279474
+B   17 3697    4    0    0 0.005648198
+C    0   12 3329   11    0 0.006861575
+D    0    2   26 3118    1 0.009215126
+E    0    0    2    9 3517 0.003117914</code></pre>
+<h3>PCA (<code>fitRfPcaCv$finalModel</code>)</h3>
+<pre><code>        OOB estimate of  error rate: 2.07%
+Confusion matrix:
+     A    B    C    D    E class.error
+A 5433    9   19    6    4 0.006945714
+B   59 3618   35    1    5 0.026896181
+C   10   42 3263   34    3 0.026551313
+D    4    4   99 3032    8 0.036542739
+E    3   11   23   18 3473 0.015589569</code></pre>
+<p>The model with all features clearly performs better than the one with PCA pre-processing.</p>
+<h2>Prediction</h2>
+<p>The <code>predict(fitRfCv, lifts.test)</code> gives us the prediction generated by the choosen model from the testing data set:</p>
+<pre><code>&gt; lifts.prediction = predict(fitRfCv, lifts.test)
+&gt; lifts.prediction
+ [1] B A B A A E D B A A B C B A E E A B B B
+Levels: A B C D E</code></pre>
+</body>
+</html>
